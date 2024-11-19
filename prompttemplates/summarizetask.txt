@@ -1,0 +1,7 @@
+Here is a source from the internet:
+
+```
+{content}
+```
+
+Please summarize this in plain image. Leave out all HTML.

@@ -1,0 +1,9 @@
+Here is a list of contents:
+
+{contents}
+
+Please be so kind and rewrite this into a text that could be read on the news. Make the text consistent.
+
+Begin the text with "Welcome to AI update" and the day. This is the current date: {current_date} Format is DD.MM.YYYY
+
+Please reply with the text only. Please use the language {language}.
