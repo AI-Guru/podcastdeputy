@@ -12,7 +12,7 @@ from langchain_community.chat_models import ChatOllama
 from langchain_anthropic import ChatAnthropic
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_community.document_loaders import WebBaseLoader
+from langchain_community.document_loaders import WebBaseLoader, PlaywrightURLLoader
 from source.texttospeech import ElevenLabsTextToSpeech
 
 
@@ -148,15 +148,13 @@ class Application:
                 continue
 
             # Load the document and get the page content.
-            loader = WebBaseLoader(url)
-            documents = loader.load()
-            assert len(documents) == 1, f"Expected 1 document, but got {len(documents)}"
-            document = documents[0]
-            page_content = document.page_content
+            page_content = self.load_content(url)
 
             # Process the content.
             system_message = SystemMessagePromptTemplate.from_template_file("prompttemplates/system.txt", input_variables=[])
-            system_message = system_message.format()
+            system_message = system_message.format(
+                name="Maximilian Durchfahrtshöhe",
+            )
             human_message = HumanMessagePromptTemplate.from_template_file("prompttemplates/summarizetask.txt", input_variables=[])
             human_message = human_message.format(
                 content=page_content,
@@ -201,8 +199,6 @@ class Application:
         language = "German"
 
         # Process the document.
-        system_message = SystemMessagePromptTemplate.from_template_file("prompttemplates/system.txt", input_variables=[])
-        system_message = system_message.format()
         human_message = HumanMessagePromptTemplate.from_template_file("prompttemplates/rewritetask.txt", input_variables=[])
         human_message = human_message.format(
             contents=contents,
@@ -214,7 +210,36 @@ class Application:
         self.add_chat_message("assistant", f"Done processing sources.")
         yield compile_yield()
 
-    
+    def load_content(self, url, mode: str = "playwrightcustom"):
+
+        if mode == "webbase":
+            loader = WebBaseLoader(url)
+            documents = loader.load()
+            assert len(documents) == 1, f"Expected 1 document, but got {len(documents)}"
+            document = documents[0]
+            page_content = document.page_content
+
+        elif mode == "playwright":
+            loader = PlaywrightURLLoader(url)
+            documents = loader.load()
+            assert len(documents) == 1, f"Expected 1 document, but got {len(documents)}"
+            document = documents[0]
+            page_content = document.page_content
+
+        elif mode == "playwrightcustom":
+            from playwright.sync_api import sync_playwright
+            with sync_playwright() as p:
+                browser = p.chromium.launch(headless=True)
+                page = browser.new_page()
+                page.goto(url)
+                content = page.content()
+                browser.close()
+            page_content = content
+        else:
+            raise ValueError(f"Invalid mode: {mode}")
+        return page_content
+
+
     def text_to_speech(self, text):
         
         audio = text_to_speech.to_speech(text)

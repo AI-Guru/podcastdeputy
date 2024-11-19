@@ -4,4 +4,4 @@ Here is a source from the internet:
 {content}
 ```
 
-Please summarize this in plain image. Leave out all HTML.
+Please summarize this in plain languages. Leave out all HTML. Start with the title.

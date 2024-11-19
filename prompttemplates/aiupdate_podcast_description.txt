@@ -1,0 +1,7 @@
+Hier ist der Text eines Podcasts:
+
+```
+{podcast_text}
+````
+
+Bitte schreibe einen kurzen Text als Podcast-Beschreibung. Antworte nur mit der Beschreibung.

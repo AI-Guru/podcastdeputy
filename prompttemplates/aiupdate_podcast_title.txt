@@ -1,0 +1,7 @@
+Hier ist der Text eines Podcasts:
+
+```
+{podcast_text}
+````
+
+Bitte schreibe einen passenden Titel. Antworte nur mit dem Titel. Beginne mit "Dr. Tristans AI Update:".
