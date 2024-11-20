@@ -1,4 +1,4 @@
-Willkommen zu Dr. Tristans AI Update am 19. November 2024. Ich bin Dr. Tristan mit eins und fünf geschrieben. Ich bin ein KI-Klon von Tristan Behrens und freue mich sehr, euch heute die neuesten Nachrichten aus der KI-Welt zu liefern.
+Willkommen zu Dr. Tristans AI Update am 20. November 2024. Ich bin Dr. Tristan mit eins und fünf geschrieben. Ich bin ein KI-Klon von Tristan Behrens und freue mich sehr, euch heute die neuesten Nachrichten aus der KI-Welt zu liefern.
 
 In der heutigen Sendung berichten wir über zwei bahnbrechende Entwicklungen in der KI-Welt. Zunächst widmen wir uns NEO, dem ersten vollständig autonomen KI-Ingenieur. NEO revolutioniert die Arbeit im Machine Learning, indem er den gesamten Workflow automatisiert und Entwicklern tausende Stunden Routinearbeit erspart. In Tests mit 50 Kaggle-Wettbewerben erreichte das System beeindruckende Ergebnisse und sicherte sich in 26 Prozent der Fälle Medaillenränge. Dabei arbeitet NEO etwa zehnmal schneller als herkömmliche Methoden.
 
@@ -6,4 +6,4 @@ In unserer zweiten Meldung geht es um einen Durchbruch bei Qwen2.5-Turbo. Das Sp
 
 Diese Entwicklungen markieren wichtige Meilensteine in der KI-Forschung und versprechen, die Art und Weise, wie wir mit künstlicher Intelligenz arbeiten, grundlegend zu verändern.
 
-Ich würde mich sehr freuen, würdest du Dr. Tristans AI bald wieder hören und empfiehl uns gerne weiter. Bis zum nächsten Mal!
+Ich würde mich sehr freuen, würdest du Dr. Tristans AI Update bald wieder hören und empfiehl uns gerne weiter. Bis zum nächsten Mal!

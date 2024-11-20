@@ -41,8 +41,15 @@ dotenv.load_dotenv()
 
 text_to_speech = ElevenLabsTextToSpeech(
     api_key=os.getenv("ELEVENLABS_API_KEY"),
-    voice_id="9gSkuKCHRczfU5aLq1qU"
+    
+    #voice_id="9gSkuKCHRczfU5aLq1qU"
+    
     #voice_id="yCJwUkOEJeSHB8xTh6HQ", #Robert?
+    
+    voice_clone_name="Tristan",
+    voice_clone_description="Ein 43-jähriger deutscher Mann.",
+    voice_clone_samples=["assets/voice_sample_tristan.mp3"]
+
     #voice_clone_name="Robert",
     #voice_clone_description="Ein 46-jähriger deutscher Mann!",
     #voice_clone_samples=["assets/voice_sample_robert.mp3"]
@@ -381,9 +388,9 @@ class Application:
         wallpaper.save(f"output/{current_date}_wallpaper.jpg")
 
         # Load the theme music. Use the first n seconds. Add a fade-in and fade-out.
-        clip_length_seconds = 10
+        clip_length_seconds = 16
         fade_in_seconds = 2
-        fade_out_seconds = 2
+        fade_out_seconds = 4
         theme_music = mpy.AudioFileClip(theme_music_path)
         theme_music = theme_music.subclip(0, clip_length_seconds)
         theme_music = audio_fadein(theme_music, fade_in_seconds) # Apply fade-in
@@ -414,6 +421,8 @@ class Application:
 
         # Optional: Clean up the temporary file
         os.remove(temp_speech_path)
+
+        return video_path
 
     def sources_to_text(self):
 
