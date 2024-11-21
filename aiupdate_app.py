@@ -53,6 +53,10 @@ text_to_speech = ElevenLabsTextToSpeech(
     #voice_clone_name="Robert",
     #voice_clone_description="Ein 46-jähriger deutscher Mann!",
     #voice_clone_samples=["assets/voice_sample_robert.mp3"]
+
+    #voice_clone_name="Martin",
+    #voice_clone_description="Ein 44-jähriger deutscher Mann!",
+    #voice_clone_samples=["assets/voice_sample_martin.mp3"]
 )
 
 class Application:
