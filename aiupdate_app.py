@@ -42,13 +42,11 @@ dotenv.load_dotenv()
 text_to_speech = ElevenLabsTextToSpeech(
     api_key=os.getenv("ELEVENLABS_API_KEY"),
     
-    #voice_id="9gSkuKCHRczfU5aLq1qU"
+    voice_id="VJmQeeqhTBZ2B4l4yyq2"
     
-    #voice_id="yCJwUkOEJeSHB8xTh6HQ", #Robert?
-    
-    voice_clone_name="Tristan",
-    voice_clone_description="Ein 43-jähriger deutscher Mann.",
-    voice_clone_samples=["assets/voice_sample_tristan.mp3"]
+    #voice_clone_name="Tristan",
+    #voice_clone_description="Ein 43-jähriger deutscher Mann.",
+    #voice_clone_samples=["assets/voice_sample_tristan.mp3"]
 
     #voice_clone_name="Robert",
     #voice_clone_description="Ein 46-jähriger deutscher Mann!",
@@ -250,6 +248,7 @@ class Application:
             podcast_text=self.podcast_text,
         )
         self.podcast_title = self.invoke_model(system_message, human_message)
+        self.podcast_title = self.podcast_title.replace("Tristan", "TR15TAN")
         yield compile_yield()
 
         # Write the podcast description.
@@ -258,8 +257,11 @@ class Application:
             podcast_text=self.podcast_text,
         )
         self.podcast_description = self.invoke_model(system_message, human_message)
+        self.podcast_description = self.podcast_description.replace("Tristan", "TR15TAN")
         for processed_source in self.processed_sources:
-            self.podcast_description += f"\n\nSource: {processed_source['url']}"
+            self.podcast_description += f"\n\Quelle: {processed_source['url']}"
+        self.podcast_description += "\n\n"
+        self.podcast_description += "Achtung: Dr. TR15TANs AI Update ist ein künstlich generierter Podcast. Die Informationen sind möglicherweise nicht korrekt."
         yield compile_yield()
 
         # Done.
@@ -363,10 +365,17 @@ class Application:
         assert found, f"Could not find Garamond font"
 
         # Use a default font.
-        font = ImageFont.truetype(font_path, 40)
+        font_size = 40
+        font = ImageFont.truetype(font_path, font_size)
 
         # Calculate the bounding box of the text
         text_bbox = draw.textbbox((50, 600), podcast_title_short, font=font)
+
+        # Make the text smaller if it is too big.
+        while text_bbox[2] > wallpaper.width - 50:
+            font_size -= 5
+            font = ImageFont.truetype(font_path, font_size)
+            text_bbox = draw.textbbox((50, 600), podcast_title_short, font=font)
 
         # Make the text bounding box a bit bigger.
         offset = 10
