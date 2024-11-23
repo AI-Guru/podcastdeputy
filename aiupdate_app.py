@@ -23,15 +23,15 @@ from source.texttospeech import ElevenLabsTextToSpeech
 
 
 # Configuration.
-default_aiupdate_podcast_title = open("assets/default_aiupdate_podcast_title.txt", "r").read()
-default_aiupdate_podcast_description = open("assets/default_aiupdate_podcast_description.txt", "r").read()
-default_aiupdate_podcast_text = open("assets/default_aiupdate_podcast_text.txt", "r").read()
-default_aiupdate_podcast_speech_path = "assets/default_aiupdate_podcast_speech.wav"
+#default_aiupdate_podcast_title = open("assets/default_aiupdate_podcast_title.txt", "r").read()
+#default_aiupdate_podcast_description = open("assets/default_aiupdate_podcast_description.txt", "r").read()
+#default_aiupdate_podcast_text = open("assets/default_aiupdate_podcast_text.txt", "r").read()
+#default_aiupdate_podcast_speech_path = "assets/default_aiupdate_podcast_speech.wav"
 #default_aiupdate_podcast_video_path = "assets/default_aiupdate_podcast_video.mp4"
-#default_aiupdate_podcast_title = None
-#default_aiupdate_podcast_description = None
-#default_aiupdate_podcast_text = None
-#default_aiupdate_podcast_speech_path = None
+default_aiupdate_podcast_title = None
+default_aiupdate_podcast_description = None
+default_aiupdate_podcast_text = None
+default_aiupdate_podcast_speech_path = None
 default_aiupdate_podcast_video_path = None
 
 default_sources_text = open("assets/defaultsources.txt", "r").read()
@@ -42,7 +42,7 @@ dotenv.load_dotenv()
 text_to_speech = ElevenLabsTextToSpeech(
     api_key=os.getenv("ELEVENLABS_API_KEY"),
     
-    voice_id="VJmQeeqhTBZ2B4l4yyq2"
+    voice_id="RBK4g8F8gxb6uygqwlPB"
     
     #voice_clone_name="Tristan",
     #voice_clone_description="Ein 43-jähriger deutscher Mann.",
@@ -98,8 +98,10 @@ class Application:
                     # Create the chatbot's text field.
                     self.chatbot_element = gr.Chatbot(label="Chatbot", value=self.chat_messages, type="messages")
 
-                    # Create the user's text field.
+                    # Create the sources text field.
                     self.sources_element = gr.Textbox(lines=5, label="Sources", placeholder="Type here", value=default_sources_text)
+
+                    self.instructions_element = gr.Textbox(lines=1, label="Instructions", placeholder="Type here", value="")
 
                     # Create the button to send the user's message.
                     self.send_button = gr.Button("Send")
@@ -129,12 +131,12 @@ class Application:
             # Create the event handlers.
             self.send_button.click(
                 self.process_sources,
-                inputs=[self.sources_element],
+                inputs=[self.sources_element, self.instructions_element],
                 outputs=[self.chatbot_element, self.podcast_title_field, self.podcast_description_field, self.podcast_text_field]
             )
             self.sources_element.submit(
                 self.process_sources,
-                inputs=[self.sources_element],
+                inputs=[self.sources_element, self.instructions_element],
                 outputs=[self.chatbot_element, self.podcast_title_field, self.podcast_description_field, self.podcast_text_field]
             )
             self.speech_button.click(
@@ -148,7 +150,7 @@ class Application:
                 outputs=[self.video_player]
             )
 
-    def process_sources(self, sources):
+    def process_sources(self, sources, instructions):
 
         def compile_yield():
             return self.chat_messages, self.podcast_title, self.podcast_description, self.podcast_text
@@ -164,6 +166,12 @@ class Application:
                 yield compile_yield()
                 raise StopIteration()
         
+        # The system message.
+        system_message = SystemMessagePromptTemplate.from_template_file("prompttemplates/aiupdate_system.txt", input_variables=[])
+        system_message = system_message.format(
+            name="Dr. Tristan",
+        )
+
         # Process the sources.
         for url in urls:
 
@@ -186,15 +194,17 @@ class Application:
             page_content = self.load_content(url)
 
             # Process the content.
-            system_message = SystemMessagePromptTemplate.from_template_file("prompttemplates/aiupdate_system.txt", input_variables=[])
-            system_message = system_message.format(
-                name="Dr. Tristan",
-            )
             human_message = HumanMessagePromptTemplate.from_template_file("prompttemplates/summarizetask.txt", input_variables=[])
             human_message = human_message.format(
                 content=page_content,
             )
             processed_content = self.invoke_model(system_message, human_message)
+
+            # Handle errors.
+            if "COULD NOT READ" in processed_content:
+                self.add_chat_message("assistant", f"Could not process content: {url}. {processed_content}")
+                yield compile_yield()
+                continue
 
             # Add the processed content to the chat.
             self.add_chat_message("assistant", f"Processed content: {processed_content}")
@@ -238,6 +248,7 @@ class Application:
         human_message = human_message.format(
             contents=contents,
             current_date=current_date,
+            instructions=instructions,
         )
         self.podcast_text = self.invoke_model(system_message, human_message)
         yield compile_yield()
@@ -248,6 +259,7 @@ class Application:
             podcast_text=self.podcast_text,
         )
         self.podcast_title = self.invoke_model(system_message, human_message)
+        self.podcast_title = time.strftime("%d.%m.%Y") + " - " + self.podcast_title.split("Dr. Tristans AI Update:")[1].strip()
         self.podcast_title = self.podcast_title.replace("Tristan", "TR15TAN")
         yield compile_yield()
 
@@ -259,7 +271,7 @@ class Application:
         self.podcast_description = self.invoke_model(system_message, human_message)
         self.podcast_description = self.podcast_description.replace("Tristan", "TR15TAN")
         for processed_source in self.processed_sources:
-            self.podcast_description += f"\n\Quelle: {processed_source['url']}"
+            self.podcast_description += f"\n\nQuelle: {processed_source['url']}"
         self.podcast_description += "\n\n"
         self.podcast_description += "Achtung: Dr. TR15TANs AI Update ist ein künstlich generierter Podcast. Die Informationen sind möglicherweise nicht korrekt."
         yield compile_yield()
@@ -330,9 +342,10 @@ class Application:
         current_date = time.strftime("%d.%m.%Y")
 
         # Do some text transformations.
-        podcast_title_short = current_date + " - " + podcast_title.split("Dr. Tristans AI Update:")[1].strip()
-        podcast_title = podcast_title.replace("Tristan", "TR15TAN")
-        podcast_description = podcast_description.replace("Tristan", "TR15TAN")
+        podcast_title_short = podcast_title
+        #podcast_title_short = time.strftime("%d.%m.%Y") + " - " + podcast_title.split("Dr. Tristans AI Update:")[1].strip()
+        #podcast_title = podcast_title.replace("Tristan", "TR15TAN")
+        #podcast_description = podcast_description.replace("Tristan", "TR15TAN")
         print(f"Podcast title: {podcast_title}")
         print(f"Podcast title short: {podcast_title_short}")
         print(f"Podcast description: {podcast_description}")
@@ -386,13 +399,6 @@ class Application:
 
         # Draw the text
         draw.text((50 + offset, 600 + offset), podcast_title_short, fill=(0, 0, 0), font=font)
-
-        # Shift the hue of the wallpaper towards blue.
-        #wallpaper = wallpaper.convert("HSV")
-        #wallpaper = np.array(wallpaper)
-        #wallpaper[:, :, 0] = (wallpaper[:, :, 0] + 150) % 256
-        #wallpaper = Image.fromarray(wallpaper, "HSV")
-        #wallpaper = wallpaper.convert("RGB")
 
         # Get the current date. Format is YYYYMMDD.
         current_date = time.strftime("%Y%m%d")

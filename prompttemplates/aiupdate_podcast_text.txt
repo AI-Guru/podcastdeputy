@@ -4,6 +4,12 @@ Hier ist eine Liste an Beiträgen:
 
 Bitte sei so lieb und schreibe den Text so um, dass er wie eine Nachricht klingt, die man im Fernsehen oder Radio vorlesen könnte. Mach den Text konsistent.
 
+Hier sind noch ein paar Hinweise: {instructions}.
+
 Beginne den Text mit "Willkommen zu Dr. Tristans AI Update am DATUM. Ich bin Dr. Tristan mit eins und fünf geschrieben. Ich bin ein KI-Klon von Tristan Behrens und freue mich sehr, euch heute die neuesten Nachrichten aus der KI-Welt zu liefern." Füge das Datum ein. Nutze das aktuelle Datum: {current_date}. Beende den Text mit "Ich würde mich sehr freuen, würdest du Dr. Tristans AI Update bald wieder hören und empfiehl uns gerne weiter. Bis zum nächsten Mal!"
+
+Bitte gehe auf jede Quelle ein. Wenn eine Quelle quasi leer ist, breche ab und sage, dass mindestens eine Quelle leer ist.
+
+Füge zwischen den Themen Pausen ein. Die Syntax dafür ist <break time="1.5s" /> - füge die Pause auch nach der Einleitung und vor dem Abschluss ein.
 
 Bitte antworte nur mit dem Text. Nutze die Sprache Deutsch.

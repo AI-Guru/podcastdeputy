@@ -5,3 +5,5 @@ Here is a source from the internet:
 ```
 
 Please summarize this in plain languages. Leave out all HTML. Start with the title.
+
+If you cannot process the content, because it is empty or a could not be fetched or is not a proper source or is a login message or a something about robots, please let me know and reply with a message and "COULD NOT READ".
