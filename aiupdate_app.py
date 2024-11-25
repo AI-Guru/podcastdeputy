@@ -34,7 +34,8 @@ default_aiupdate_podcast_text = None
 default_aiupdate_podcast_speech_path = None
 default_aiupdate_podcast_video_path = None
 
-default_sources_text = open("assets/defaultsources.txt", "r").read()
+#default_sources_text = open("assets/defaultsources.txt", "r").read()
+default_sources_text = ""
 
 # Load the environment variables.
 dotenv.load_dotenv()
@@ -280,7 +281,7 @@ class Application:
         self.add_chat_message("assistant", f"Done processing sources.")
         yield compile_yield()
 
-    def load_content(self, url, mode: str = "playwrightcustom"):
+    def load_content(self, url, mode: str = "playwrightcustom", extract_body: bool = True):
 
         if mode == "webbase":
             loader = WebBaseLoader(url)
@@ -307,6 +308,16 @@ class Application:
             page_content = content
         else:
             raise ValueError(f"Invalid mode: {mode}")
+        
+        # Extract the body.
+        if extract_body:
+            from bs4 import BeautifulSoup
+            soup = BeautifulSoup(page_content, "html.parser")
+            body = soup.find("body")
+            if body is not None:
+                page_content = body.get_text()
+
+        # Done.
         return page_content
 
 
@@ -471,10 +482,10 @@ class Application:
         self.logger.info(f"System message: {system_message}")
         self.logger.info(f"Human message: {human_message}")
 
-        return self.invoke_model_messags([system_message, human_message])
+        return self.invoke_model_messages([system_message, human_message])
 
 
-    def invoke_model_messags(self, messages):
+    def invoke_model_messages(self, messages):
         assert isinstance(messages, list), f"Expected a list of messages, but got {type(messages)}"
         llm = self.get_llm()
         prompt = ChatPromptTemplate.from_messages(messages)
