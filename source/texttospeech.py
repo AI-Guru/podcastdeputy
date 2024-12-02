@@ -61,7 +61,7 @@ class ElevenLabsTextToSpeech:
             #"language_code": self.language_code,
             "voice_settings": {
                 "stability": 0.5,
-                "similarity_boost": 0.5,
+                "similarity_boost": 0.75,
                 #"style": 123,
                 #"use_speaker_boost": True
             },

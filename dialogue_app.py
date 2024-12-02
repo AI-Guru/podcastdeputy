@@ -6,6 +6,10 @@ import numpy as np
 import time
 import logging
 import uuid
+from typing import List
+from langchain.output_parsers import PydanticOutputParser
+from langchain_core.prompts import PromptTemplate
+from pydantic import BaseModel, Field, validator
 from PIL import Image, ImageDraw, ImageFont
 import moviepy.editor as mpy
 from moviepy.audio.fx.audio_fadein import audio_fadein
@@ -34,8 +38,8 @@ default_aiupdate_podcast_text = None
 default_aiupdate_podcast_speech_path = None
 default_aiupdate_podcast_video_path = None
 
-#default_sources_text = open("assets/defaultsources.txt", "r").read()
-default_sources_text = ""
+default_sources_text = open("assets/defaultsources.txt", "r").read()
+#default_sources_text = ""
 
 # Load the environment variables.
 dotenv.load_dotenv()
@@ -45,13 +49,27 @@ if not os.getenv("ELEVENLABS_API_KEY"):
     raise ValueError("ELEVENLABS_API_KEY environment variable is not set. Get one from https://elevenlabs.io/app/settings/api-keys and set it in the .env file. See the .env.example file for an example.")
 if not os.getenv("ELEVENLABS_VOICE_ID"):
     raise ValueError("ELEVENLABS_VOICE_ID environment variable is not set. Get one from https://elevenlabs.io/app/voice-lab and set it in the .env file. See the .env.example file for an example.")
+if not os.getenv("ELEVENLABS_VOICE_2_ID"):
+    raise ValueError("ELEVENLABS_VOICE_2_ID environment variable is not set. Get one from https://elevenlabs.io/app/voice-lab and set it in the .env file. See the .env.example file for an example.")
 if not os.getenv("ANTHROPIC_API_KEY"):
     raise ValueError("ANTHROPIC_API_KEY environment variable is not set. Get one from https://console.anthropic.com/settings/keys and set it in the .env file. See the .env.example file for an example.")
 
-text_to_speech = ElevenLabsTextToSpeech(
+text_to_speech_voice_1 = ElevenLabsTextToSpeech(
     api_key=os.getenv("ELEVENLABS_API_KEY"),
     voice_id=os.getenv("ELEVENLABS_VOICE_ID")
 )
+text_to_speech_voice_2 = ElevenLabsTextToSpeech(
+    api_key=os.getenv("ELEVENLABS_API_KEY"),
+    voice_id=os.getenv("ELEVENLABS_VOICE_2_ID")
+)
+
+class Utterance(BaseModel):
+    person: str = Field(description="The person who is speaking.")
+    text: str = Field(description="The text the person is speaking.")
+
+class Dialogue(BaseModel):
+    utterances: List[Utterance] = Field(description="The utterances in the dialogue.")
+
 
 class Application:
 
@@ -195,6 +213,7 @@ class Application:
                 content=page_content,
             )
             processed_content = self.invoke_model(system_message, human_message)
+            #processed_content = "Deutschland is in Sachen KI abgehängt. Das ist das Ergebnis einer Studie des Weltwirtschaftsforums. Deutschland belegt in einem Ranking von 105 Ländern den 17. Platz. Die Studie untersucht, wie gut Länder auf die KI-Revolution vorbereitet sind. Deutschland hat in den letzten Jahren an Boden verloren. In der Studie werden verschiedene Faktoren untersucht. Dazu gehören die Qualität der Forschung, die Verfügbarkeit von Daten und die politische Unterstützung. Deutschland hat in allen Bereichen schlecht abgeschnitten. Die USA und China sind die führenden Länder in Sachen KI. Sie haben die besten Forschungseinrichtungen und die meisten Daten. Die Politik unterstützt die KI-Entwicklung. Deutschland muss mehr in KI investieren, um den Anschluss nicht zu verlieren."
 
             # Handle errors.
             if "COULD NOT READ" in processed_content:
@@ -240,13 +259,19 @@ class Application:
         current_date = f"{current_date_day} {current_date_month} {current_date_year}"
 
         # Write the podcast text.
-        human_message = HumanMessagePromptTemplate.from_template_file("prompttemplates/aiupdate_podcast_text.txt", input_variables=[])
+        parser = PydanticOutputParser(pydantic_object=Dialogue)
+        parser_format_instructions = parser.get_format_instructions()
+        human_message = HumanMessagePromptTemplate.from_template_file("prompttemplates/dialogue_text.txt", input_variables=[])
         human_message = human_message.format(
             contents=contents,
             current_date=current_date,
             instructions=instructions,
         )
-        self.podcast_text = self.invoke_model(system_message, human_message)
+        human_message.content += "\n\n" + parser_format_instructions
+        dialogue = self.invoke_model(system_message, human_message)
+        dialogue = parser.invoke(dialogue)
+        #self.podcast_text_pydantic = dialogue
+        self.podcast_text = dialogue.model_dump_json(indent=4)
         yield compile_yield()
 
         # Write the podcast title.
@@ -317,16 +342,45 @@ class Application:
 
 
     def text_to_speech(self, text):
-        
-        audio = text_to_speech.to_speech(text)
+
+        # Parse the dialogue.
+        dialogue = Dialogue.model_validate_json(text)
+       
+        # Create the output folder.
+        output_folder = os.path.join("output", "dialogues")
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
+
+        # Create the audio files.
+        output_files = []
+        for utterance_index, utterance in enumerate(dialogue.utterances):
+            print(f"{utterance.person}: {utterance.text}")
+
+            output_file = os.path.join(output_folder, f"{utterance_index:04d}-{utterance.person}.wav")
+            if "Tristan" in utterance.person:
+                text_to_speech = text_to_speech_voice_1
+            elif "Robert" in utterance.person:
+                text_to_speech = text_to_speech_voice_2
+            else:
+                raise ValueError(f"Unknown person: {utterance.person}")
+            audio = text_to_speech.to_speech(utterance.text)
+            with open(output_file, "wb") as f:
+                f.write(audio)
+            output_files.append(output_file)
+
+        # Merge the audio files.
+        audio_clips = [mpy.AudioFileClip(output_file) for output_file in output_files]
+        audio_clip = mpy.concatenate_audioclips(audio_clips)
+        output_file = os.path.join(output_folder, "dialogue.wav")
+        audio_clip.write_audiofile(output_file)
 
         # Save the audio to a file.
-        if not os.path.exists("output"):
-            os.makedirs("output")
-        filename = f"output/{uuid.uuid4()}.wav"
-        with open(filename, "wb") as f:
-            f.write(audio)
-        return filename
+        #if not os.path.exists("output"):
+        #    os.makedirs("output")
+        #filename = f"output/{uuid.uuid4()}.wav"
+        #with open(filename, "wb") as f:
+        #    f.write(audio)
+        return output_file
 
     
     def speech_to_video(self, podcast_title, podcast_description, podcast_text, podcast_speech):
