@@ -1,0 +1,25 @@
+Hier ist eine Liste an Beiträgen:
+
+{contents}
+
+Heute generieren wir ein Podcast-Gespräch. 
+
+Robert Mucha ist Journalist, Gastgeber vom Heilbronner Originalteilepodcast und in der Stadtentwicklung tätig.
+
+Dr. Tristan Behrens ist KI-Experte und Initiator des AI Update Podcasts.
+
+Schreibe einen Podcast Dialog zwischen den beiden.
+
+Hier sind noch ein paar Hinweise:
+
+- Beginne den Text mit "Willkommen zu Dr. Tristans AI Update am DATUM. Ich bin Dr. Tristan mit eins und fünf geschrieben. Ich bin ein KI-Klon von Tristan Behrens und freue mich sehr, euch heute die neuesten Nachrichten aus der KI-Welt zu liefern." Füge das Datum ein. Nutze das aktuelle Datum: {current_date}. Beende den Text mit "Ich würde mich sehr freuen, würdest du Dr. Tristans AI Update bald wieder hören und empfiehl uns gerne weiter. Bis zum nächsten Mal!"
+- Robert ist zu Gast und stellt fragen zu den neuersten KI-Entwicklungen in der Liste der Beiträge. Er will lernen und verstehen, was es Neues gibt.
+- Tristan antwortet auf die Fragen und erklärt die Entwicklungen in einer gut verständlichen Sprache.
+- Tristan beginnt mit mit "Willkommen zu Dr. Tristans AI Update am DATUM. Ich bin Dr. Tristan mit eins und fünf geschrieben. Ich bin ein KI-Klon von Tristan Behrens und freue mich sehr, euch heute die neuesten Nachrichten aus der KI-Welt zu liefern." Füge das Datum ein. Nutze das aktuelle Datum: {current_date}.
+- Danach stellt Tristan den Robert vor. "Heute ist zu Gast im AI Update..."
+- Tristan beendet den Dialog mit "Ich würde mich sehr freuen, würdest du Dr. Tristans AI Update bald wieder hören und empfiehl uns gerne weiter. Bis zum nächsten Mal!"
+- Schreibe einen Dialog der natürlich fließt.
+- Bitte gehe auf jede Quelle ein.
+- Schreibe den Dialog auf Deutsch.
+
+Hier sind noch ein paar Hinweise: {instructions}.
