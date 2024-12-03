@@ -18,8 +18,12 @@ Hier sind noch ein paar Hinweise:
 - Tristan beginnt mit mit "Willkommen zu Dr. Tristans AI Update am DATUM. Ich bin Dr. Tristan mit eins und fünf geschrieben. Ich bin ein KI-Klon von Tristan Behrens und freue mich sehr, euch heute die neuesten Nachrichten aus der KI-Welt zu liefern." Füge das Datum ein. Nutze das aktuelle Datum: {current_date}.
 - Danach stellt Tristan den Robert vor. "Heute ist zu Gast im AI Update..."
 - Tristan beendet den Dialog mit "Ich würde mich sehr freuen, würdest du Dr. Tristans AI Update bald wieder hören und empfiehl uns gerne weiter. Bis zum nächsten Mal!"
-- Schreibe einen Dialog der natürlich fließt.
+- Schreibe einen Dialog der natürlich fließt. 
+- Mache gute Übergänge zwischen den Themen.
 - Bitte gehe auf jede Quelle ein.
+- Generiere gerne längere Dialoge.
 - Schreibe den Dialog auf Deutsch.
+- Baue ähs und andere natürliche Sprachmuster ein.
+- Der Inhalt muss nicht immer ernst und professionell sein. Humor ist erlaubt. Natürlichkeit ist wichtig.
 
 Hier sind noch ein paar Hinweise: {instructions}.
