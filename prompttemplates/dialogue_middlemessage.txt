@@ -1,0 +1,11 @@
+Hier ist ein Beitrag aus der Mitte der Liste:
+
+```
+{content}
+```
+
+Hinweise:
+- Die Diskussion findet weiterhin zwischen Robert und Tristan statt.
+
+Führe die Diskussion mit dem Beitrag fort. Du kannst bei Bedarf bezug auf die Beiträge davor machen. Musst du aber nur wenn es passt. Mache eine gute Überleitung zum Dialog vorher. Generiere gerne längere Dialoge.
+

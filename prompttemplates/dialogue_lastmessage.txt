@@ -1,0 +1,13 @@
+Hier ist der letzte Beitrag:
+
+```
+{content}
+```
+
+Hinweise:
+
+- Die Diskussion findet weiterhin zwischen Robert und Tristan statt.
+- Tristan beendet den Dialog mit "Ich würde mich sehr freuen, würdest du Dr. Tristans AI Update bald wieder hören und empfiehl uns gerne weiter. Bis zum nächsten Mal!"
+
+
+Schreibe eine Diskussion über den Beitrag und beende dann den Podcast mit einer Verabschiedung. Mache eine schöne Überleitung zum Ende. Generiere insgesamt gerne längere Dialoge.

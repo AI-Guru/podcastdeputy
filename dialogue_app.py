@@ -7,6 +7,7 @@ import time
 import logging
 import uuid
 from typing import List
+import hashlib
 from langchain.output_parsers import PydanticOutputParser
 from langchain_core.prompts import PromptTemplate
 from pydantic import BaseModel, Field, validator
@@ -14,10 +15,11 @@ from PIL import Image, ImageDraw, ImageFont
 import moviepy.editor as mpy
 from moviepy.audio.fx.audio_fadein import audio_fadein
 from moviepy.audio.fx.audio_fadeout import audio_fadeout
-from moviepy.audio.AudioClip import AudioArrayClip
+from moviepy.audio.AudioClip import AudioArrayClip, AudioClip, CompositeAudioClip
 import dotenv
 import langchain_core
 from langchain_core.prompts.chat import HumanMessagePromptTemplate, AIMessagePromptTemplate, SystemMessagePromptTemplate
+from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from langchain_community.chat_models import ChatOllama
 from langchain_anthropic import ChatAnthropic
 from langchain_core.output_parsers import StrOutputParser
@@ -64,7 +66,7 @@ text_to_speech_voice_2 = ElevenLabsTextToSpeech(
 )
 
 class Utterance(BaseModel):
-    person: str = Field(description="The person who is speaking.")
+    person: str = Field(description="The person who is speaking. Either 'Tristan' or 'Robert'.")
     text: str = Field(description="The text the person is speaking.")
 
 class Dialogue(BaseModel):
@@ -164,7 +166,12 @@ class Application:
                 outputs=[self.video_player]
             )
 
-    def process_sources(self, sources, instructions):
+    def process_sources(self, sources, instructions, multi_step_generation=True):
+
+        # Output directory.
+        output_directory = "output/processed_sources"
+        if not os.path.exists(output_directory):
+            os.makedirs(output_directory)
 
         def compile_yield():
             return self.chat_messages, self.podcast_title, self.podcast_description, self.podcast_text
@@ -189,37 +196,41 @@ class Application:
         # Process the sources.
         for url in urls:
 
-            # If it already has been processed, skip.
-            if any([processed_source["url"] == url for processed_source in self.processed_sources]):
-                self.add_chat_message("assistant", f"URL already processed: {url}")
-                yield compile_yield()
-                continue
-
+            # Update the chat.
             self.add_chat_message("assistant", f"Processing URL: {url}")
             yield compile_yield()
 
-            # Skip if the URL is already processed.
-            if any([processed_source["url"] == url for processed_source in self.processed_sources]):
-                self.add_chat_message("assistant", f"URL already processed: {url}")
-                yield compile_yield()
-                continue
+            # Use a hash of the URL as the filename.
+            filename = hashlib.md5(url.encode()).hexdigest() + ".txt"
+            filepath = os.path.join(output_directory, filename)
 
-            # Load the document and get the page content.
-            page_content = self.load_content(url)
+            # If the file already exists, load it.
+            if os.path.exists(filepath):
+                with open(filepath, "r") as f:
+                    processed_content = f.read()
 
-            # Process the content.
-            human_message = HumanMessagePromptTemplate.from_template_file("prompttemplates/summarizetask.txt", input_variables=[])
-            human_message = human_message.format(
-                content=page_content,
-            )
-            processed_content = self.invoke_model(system_message, human_message)
-            #processed_content = "Deutschland is in Sachen KI abgehängt. Das ist das Ergebnis einer Studie des Weltwirtschaftsforums. Deutschland belegt in einem Ranking von 105 Ländern den 17. Platz. Die Studie untersucht, wie gut Länder auf die KI-Revolution vorbereitet sind. Deutschland hat in den letzten Jahren an Boden verloren. In der Studie werden verschiedene Faktoren untersucht. Dazu gehören die Qualität der Forschung, die Verfügbarkeit von Daten und die politische Unterstützung. Deutschland hat in allen Bereichen schlecht abgeschnitten. Die USA und China sind die führenden Länder in Sachen KI. Sie haben die besten Forschungseinrichtungen und die meisten Daten. Die Politik unterstützt die KI-Entwicklung. Deutschland muss mehr in KI investieren, um den Anschluss nicht zu verlieren."
+            # Otherwise, load the content.
+            else:
+                # Load the document and get the page content.
+                page_content = self.load_content(url)
 
-            # Handle errors.
-            if "COULD NOT READ" in processed_content:
-                self.add_chat_message("assistant", f"Could not process content: {url}. {processed_content}")
-                yield compile_yield()
-                continue
+                # Process the content.
+                human_message = HumanMessagePromptTemplate.from_template_file("prompttemplates/summarizetask.txt", input_variables=[])
+                human_message = human_message.format(
+                    content=page_content,
+                )
+                processed_content = self.invoke_model(system_message, human_message)
+                #processed_content = "Deutschland is in Sachen KI abgehängt. Das ist das Ergebnis einer Studie des Weltwirtschaftsforums. Deutschland belegt in einem Ranking von 105 Ländern den 17. Platz. Die Studie untersucht, wie gut Länder auf die KI-Revolution vorbereitet sind. Deutschland hat in den letzten Jahren an Boden verloren. In der Studie werden verschiedene Faktoren untersucht. Dazu gehören die Qualität der Forschung, die Verfügbarkeit von Daten und die politische Unterstützung. Deutschland hat in allen Bereichen schlecht abgeschnitten. Die USA und China sind die führenden Länder in Sachen KI. Sie haben die besten Forschungseinrichtungen und die meisten Daten. Die Politik unterstützt die KI-Entwicklung. Deutschland muss mehr in KI investieren, um den Anschluss nicht zu verlieren."
+
+                # Handle errors.
+                if "COULD NOT READ" in processed_content:
+                    self.add_chat_message("assistant", f"Could not process content: {url}. {processed_content}")
+                    yield compile_yield()
+                    continue
+
+                # Save the message.
+                with open(filepath, "w") as f:
+                    f.write(processed_content)
 
             # Add the processed content to the chat.
             self.add_chat_message("assistant", f"Processed content: {processed_content}")
@@ -228,29 +239,21 @@ class Application:
             # Save the processed source.
             processed_source = {
                 "url": url,
-                "original_text": page_content,
                 "processed_text": processed_content,
             }
             self.processed_sources.append(processed_source)
 
             # Count the number of words.
-            words = page_content.split(" ")
+            words = processed_content.split(" ")
             self.add_chat_message("assistant", f"Number of words roughly: {len(words)}")
 
+            # Done processing source.
             yield compile_yield()
-
 
         # Update the chat.
         self.add_chat_message("assistant", f"Done processing sources. Now processing the sources.")
         yield compile_yield()
 
-        # Now process the sources.
-        contents = "Here are the processed sources:\n\n"
-        for processed_source_index, processed_source in enumerate(self.processed_sources):
-            contents += f"Source {processed_source_index + 1}:\n"
-            contents += "```\n"
-            contents += processed_source["processed_text"]
-            contents += "\n```\n\n" 
 
         # Get the current date. The day is a number. The month is a word. The year is a number.
         current_date_day = time.strftime("%d")
@@ -258,21 +261,112 @@ class Application:
         current_date_year = time.strftime("%Y")
         current_date = f"{current_date_day} {current_date_month} {current_date_year}"
 
-        # Write the podcast text.
+        # Create the parser.
         parser = PydanticOutputParser(pydantic_object=Dialogue)
         parser_format_instructions = parser.get_format_instructions()
-        human_message = HumanMessagePromptTemplate.from_template_file("prompttemplates/dialogue_text.txt", input_variables=[])
-        human_message = human_message.format(
-            contents=contents,
-            current_date=current_date,
-            instructions=instructions,
-        )
-        human_message.content += "\n\n" + parser_format_instructions
-        dialogue = self.invoke_model(system_message, human_message)
-        dialogue = parser.invoke(dialogue)
-        #self.podcast_text_pydantic = dialogue
-        self.podcast_text = dialogue.model_dump_json(indent=4)
-        yield compile_yield()
+
+        # Check if we have enough sources.
+        if len(self.processed_sources) < 3:
+            multi_step_generation = False
+
+        # Do a single step generation.
+        if not multi_step_generation:
+
+            # Now process the sources.
+            contents = "Here are the processed sources:\n\n"
+            for processed_source_index, processed_source in enumerate(self.processed_sources):
+                contents += f"Source {processed_source_index + 1}:\n"
+                contents += "```\n"
+                contents += processed_source["processed_text"]
+                contents += "\n```\n\n" 
+
+            # Write the podcast text.
+            human_message = HumanMessagePromptTemplate.from_template_file("prompttemplates/dialogue_text.txt", input_variables=[])
+            human_message = human_message.format(
+                contents=contents,
+                current_date=current_date,
+                instructions=instructions,
+            )
+            human_message.content += "\n\n" + parser_format_instructions
+            dialogue = self.invoke_model(system_message, human_message)
+            dialogue = parser.invoke(dialogue)
+            self.podcast_text = dialogue.model_dump_json(indent=4)
+            yield compile_yield()
+
+        # Do a multi-step generation.
+        else:
+
+            # Initialize the dialogue.
+            chat_messages = []
+            system_message = SystemMessagePromptTemplate.from_template_file("prompttemplates/dialogue_system.txt", input_variables=[])
+            system_message = system_message.format()
+            chat_messages.append(system_message)
+
+            # 
+            self.logger.info(f"Will process {len(self.processed_sources)} sources...")
+
+            # Go through the sources.
+            full_dialogue = Dialogue(utterances=[])
+            for processed_source_index, processed_source in enumerate(self.processed_sources):
+
+                self.logger.info(f"Processing source {processed_source_index + 1}/{len(self.processed_sources)}...")
+
+                content = processed_source["processed_text"]
+                #print(f"Processing source {processed_source_index + 1}.")
+                #print(f"Content: {content}...")
+                #continue
+
+                # Find out where we are.
+                is_first_source = processed_source_index == 0
+                is_last_source = processed_source_index == len(self.processed_sources) - 1
+
+                # Handle the first source.
+                if is_first_source:
+                    template_path = "prompttemplates/dialogue_firstmessage.txt"
+                
+                # Handle a source that is neither the first nor the last.
+                elif not is_first_source and not is_last_source:
+                    template_path = "prompttemplates/dialogue_middlemessage.txt"
+
+                # Handle the last message.
+                elif is_last_source:
+                    template_path = "prompttemplates/dialogue_lastmessage.txt"
+
+                # Should not happen.
+                else:
+                    assert False, "Should not happen"
+
+                #
+                print(f"Template path: {template_path}")
+
+                # Invoke the model.
+                human_message = HumanMessagePromptTemplate.from_template_file(template_path, input_variables=[])
+                human_message = human_message.format(
+                    content=content,
+                    current_date=current_date,
+                    instructions=instructions,
+                )
+                human_message.content += "\n\n" + parser_format_instructions
+                ai_message = self.invoke_model_messages(self.chat_messages + [human_message])
+
+                # Extend the dialogue.
+                dialogue = parser.invoke(ai_message)
+                full_dialogue.utterances.extend(dialogue.utterances)
+                print(f"Number of new utterances: {len(dialogue.utterances)}")
+                print(f"Dialogue length: {len(full_dialogue.utterances)}")
+                del dialogue
+
+                # Add the messages to the chat.
+                chat_messages.append(human_message)
+                chat_messages.append(ai_message)
+                print(f"Chat messages length: {len(chat_messages)}")
+
+                # Update the podcast text.
+                self.podcast_text = full_dialogue.model_dump_json(indent=4)
+                self.add_chat_message("assistant", f"Processed source {processed_source_index + 1}.")
+                yield compile_yield()
+
+        #assert False
 
         # Write the podcast title.
         human_message = HumanMessagePromptTemplate.from_template_file("prompttemplates/aiupdate_podcast_title.txt", input_variables=[])
@@ -356,30 +450,47 @@ class Application:
         for utterance_index, utterance in enumerate(dialogue.utterances):
             print(f"{utterance.person}: {utterance.text}")
 
-            output_file = os.path.join(output_folder, f"{utterance_index:04d}-{utterance.person}.wav")
-            if "Tristan" in utterance.person:
-                text_to_speech = text_to_speech_voice_1
-            elif "Robert" in utterance.person:
-                text_to_speech = text_to_speech_voice_2
+            # Output file name is the hash of the utterance.
+            text = utterance.person + ": " + utterance.text
+            output_file_name = hashlib.md5(text.encode("utf-8")).hexdigest() + ".wav"
+
+            # Define the output file path.
+            output_file = os.path.join(output_folder, output_file_name)
+
+            # Do not create the file if it already exists.
+            if os.path.exists(output_file):
+                output_files.append(output_file)
+                continue
+
+            # Override the text to speech voice.
             else:
-                raise ValueError(f"Unknown person: {utterance.person}")
-            audio = text_to_speech.to_speech(utterance.text)
-            with open(output_file, "wb") as f:
-                f.write(audio)
-            output_files.append(output_file)
+                if "Tristan" in utterance.person:
+                    text_to_speech = text_to_speech_voice_1
+                elif "Robert" in utterance.person:
+                    text_to_speech = text_to_speech_voice_2
+                else:
+                    raise ValueError(f"Unknown person: {utterance.person}")
+                audio = text_to_speech.to_speech(utterance.text)
+                with open(output_file, "wb") as f:
+                    f.write(audio)
+                output_files.append(output_file)
+
+        # Add random silence between the audio clips.
+        audio_clips = [mpy.AudioFileClip(output_file) for output_file in output_files]
+        for i in range(len(audio_clips) - 1):
+            silence_duration = np.random.uniform(0.5, 1.5)
+            silent_clip = AudioClip(make_frame=lambda t: [0], duration=silence_duration, fps=44100)
+            #silence_duration = np.random.uniform(0.5, 1.5)
+            #silence = np.zeros(int(silence_duration * audio_clips[i].fps))
+            #silence = AudioArrayClip(silence, fps=audio_clips[i].fps)
+            audio_clips.insert(2 * i + 1, silent_clip)
 
         # Merge the audio files.
-        audio_clips = [mpy.AudioFileClip(output_file) for output_file in output_files]
         audio_clip = mpy.concatenate_audioclips(audio_clips)
         output_file = os.path.join(output_folder, "dialogue.wav")
         audio_clip.write_audiofile(output_file)
 
-        # Save the audio to a file.
-        #if not os.path.exists("output"):
-        #    os.makedirs("output")
-        #filename = f"output/{uuid.uuid4()}.wav"
-        #with open(filename, "wb") as f:
-        #    f.write(audio)
+        # Done.
         return output_file
 
     
@@ -508,10 +619,7 @@ class Application:
         text = ""
 
         for processed_source in self.processed_sources:
-            url = processed_source["url"]
-            original_text = processed_source["original_text"]
             processed_text = processed_source["processed_text"]
-
             text += processed_text + "\n\n"
 
         return text
@@ -528,19 +636,35 @@ class Application:
     def invoke_model(self, system_message, human_message):
         assert isinstance(system_message, langchain_core.messages.system.SystemMessage), f"Expected a string for the system message, but got {type(system_message)}"
         assert isinstance(human_message, langchain_core.messages.human.HumanMessage), f"Expected a string for the human message, but got {type(human_message)}"
-        self.logger.info(f"System message: {system_message}")
-        self.logger.info(f"Human message: {human_message}")
+        #self.logger.info(f"System message: {system_message}")
+        #self.logger.info(f"Human message: {human_message}")
 
         return self.invoke_model_messages([system_message, human_message])
 
 
     def invoke_model_messages(self, messages):
         assert isinstance(messages, list), f"Expected a list of messages, but got {type(messages)}"
+        
+        def preprocess(message):
+            if isinstance(message, dict):
+                role = message["role"]
+                content = message["content"]
+                if role == "system":
+                    return SystemMessage(content=content)
+                elif role == "user":
+                    return HumanMessage(content=content)
+                elif role == "assistant":
+                    return AIMessage(content=content)
+                else:
+                    raise ValueError(f"Invalid role: {role}")
+            return message
+        messages = [preprocess(message) for message in messages]
+
         llm = self.get_llm()
         prompt = ChatPromptTemplate.from_messages(messages)
         chain = prompt | llm | StrOutputParser()
         text = chain.invoke({})
-        self.logger.info(f"Model response: {text}")
+        #self.logger.info(f"Model response: {text}")
         return text
     
 
