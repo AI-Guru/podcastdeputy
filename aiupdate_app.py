@@ -37,6 +37,15 @@ default_aiupdate_podcast_video_path = None
 #default_sources_text = open("assets/defaultsources.txt", "r").read()
 default_sources_text = ""
 
+# Assets
+wallpaper_path = "assets/aiupdate_wallpaper_xmas.jpg"
+logo_path = "assets/aiupdate_logo.jpg"
+theme_music_path = "assets/aiupdate_theme_xmas.mp3"
+assert os.path.exists(wallpaper_path), f"Wallpaper path does not exist: {wallpaper_path}"
+assert os.path.exists(logo_path), f"Logo path does not exist: {logo_path}"
+assert os.path.exists(theme_music_path), f"Theme music path does not exist: {theme_music_path}"
+
+
 # Load the environment variables.
 dotenv.load_dotenv()
 
@@ -356,14 +365,6 @@ class Application:
         print(f"Podcast title short: {podcast_title_short}")
         print(f"Podcast description: {podcast_description}")
         print(f"Podcast text: {podcast_text[:100]}...")
-
-        # Make sure the media files exist.
-        wallpaper_path = "assets/aiupdate_wallpaper.jpg"
-        assert os.path.exists(wallpaper_path), f"Wallpaper path does not exist: {wallpaper_path}"
-        logo_path = "assets/aiupdate_logo.jpg"
-        assert os.path.exists(logo_path), f"Logo path does not exist: {logo_path}"
-        theme_music_path = "assets/aiupdate_theme.mp3"
-        assert os.path.exists(theme_music_path), f"Theme music path does not exist: {theme_music_path}"
 
         # Render the logo and the title onto the wallpaper.
         wallpaper = Image.open(wallpaper_path)
