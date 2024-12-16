@@ -38,9 +38,9 @@ default_aiupdate_podcast_video_path = None
 default_sources_text = ""
 
 # Assets
-wallpaper_path = "assets/aiupdate_wallpaper_xmas.jpg"
+wallpaper_path = "assets/aiupdate_wallpaper_xmas2.png"
 logo_path = "assets/aiupdate_logo.jpg"
-theme_music_path = "assets/aiupdate_theme_xmas.mp3"
+theme_music_path = "assets/aiupdate_theme_xmas2.mp3"
 assert os.path.exists(wallpaper_path), f"Wallpaper path does not exist: {wallpaper_path}"
 assert os.path.exists(logo_path), f"Logo path does not exist: {logo_path}"
 assert os.path.exists(theme_music_path), f"Theme music path does not exist: {theme_music_path}"
