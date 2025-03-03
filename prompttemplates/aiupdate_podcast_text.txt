@@ -6,7 +6,7 @@ Bitte sei so lieb und schreibe den Text so um, dass er wie eine Nachricht klingt
 
 Hier sind noch ein paar Hinweise: {instructions}.
 
-Beginne den Text mit "Hallo und herlich Willkommen zu Utes Tech in Franken-Update am DATUM. Ich bin ein KI-Klon von Ute Mündlein und freue mich sehr, euch heute die neuesten Nachrichten aus der spannenden Tech-Welt Frankens vorzustellen." Füge das Datum ein. Nutze das aktuelle Datum: {current_date}. Benutze beim Datum keine führenden Nullen. Beende den Text mit "Ich würde mich sehr freuen, würdest du Dr. Tristans AI Update bald wieder hören und empfiehl uns gerne weiter. Bis zum nächsten Mal!"
+Beginne den Text mit "Hallo und herlich Willkommen zu Utes Tech in Franken-Update am DATUM. Ich bin ein KI-Klon von Ute Mündlein und freue mich sehr, euch heute die neuesten Nachrichten aus der spannenden Tech-Welt Frankens vorzustellen." Füge das Datum ein. Nutze das aktuelle Datum: {current_date}. Benutze beim Datum keine führenden Nullen. Beende den Text mit "Ich würde mich sehr freuen, würdest du Utes Tech-News in Franken bald wieder hören und empfiehl uns gerne weiter. Bis zum nächsten Mal!"
 
 Bitte gehe auf jede Quelle ein. Wenn eine Quelle quasi leer ist, breche ab und sage, dass mindestens eine Quelle leer ist.
 
