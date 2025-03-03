@@ -358,9 +358,9 @@ class Application:
 
         # Do some text transformations.
         podcast_title_short = podcast_title
-        #podcast_title_short = time.strftime("%d.%m.%Y") + " - " + podcast_title.split("Dr. Tristans AI Update:")[1].strip()
-        #podcast_title = podcast_title.replace("Tristan", "TR15TAN")
-        #podcast_description = podcast_description.replace("Tristan", "TR15TAN")
+        #podcast_title_short = time.strftime("%d.%m.%Y") + " - " + podcast_title.split("Utes Tech in Franken-Update:")[1].strip()
+        #podcast_title = podcast_title.replace("Utes Tech in Franken-Update")
+        #podcast_description = podcast_description.replace("Utes Tech in Franken-Update")
         print(f"Podcast title: {podcast_title}")
         print(f"Podcast title short: {podcast_title_short}")
         print(f"Podcast description: {podcast_description}")
