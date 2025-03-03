@@ -264,7 +264,7 @@ class Application:
             podcast_text=self.podcast_text,
         )
         self.podcast_title = self.invoke_model(system_message, human_message)
-        self.podcast_title = time.strftime("%d.%m.%Y") + " - " + self.podcast_title.split("Dr. Tristans AI Update:")[1].strip()
+        self.podcast_title = time.strftime("%d.%m.%Y") + " - " + self.podcast_title.split("Utes Tech in Franken-Update:")[1].strip()
         self.podcast_title = self.podcast_title.replace("Tristan", "TR15TAN")
         yield compile_yield()
 
@@ -278,7 +278,7 @@ class Application:
         for processed_source in self.processed_sources:
             self.podcast_description += f"\n\nQuelle: {processed_source['url']}"
         self.podcast_description += "\n\n"
-        self.podcast_description += "Achtung: Dr. TR15TANs AI Update ist ein künstlich generierter Podcast. Die Informationen sind möglicherweise nicht korrekt."
+        self.podcast_description += "Achtung: Utes Tech in Franken-Update ist ein KI-generierter Podcast. Die Informationen sind möglicherweise nicht korrekt."
         yield compile_yield()
 
         # Done.
